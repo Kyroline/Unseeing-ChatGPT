@@ -58,7 +58,6 @@ class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
     private val sensorListener: SensorEventListener = object : SensorEventListener {
         override fun onSensorChanged(event: SensorEvent) {
 
-            // Fetching x,y,z values
             val x = event.values[0]
             val y = event.values[1]
             val z = event.values[2]
@@ -70,10 +69,9 @@ class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
             val delta: Float = currentAcceleration - lastAcceleration
             acceleration = acceleration * 0.9f + delta
 
-            // Display a Toast message if
+            // Display speech recognition intent when
             // acceleration value is over 12
             if (acceleration > 12) {
-                // on below line we are calling speech recognizer intent.
                 val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH)
 
                 // on below line we are passing language model
@@ -89,18 +87,10 @@ class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
                     RecognizerIntent.EXTRA_LANGUAGE,
                     Locale.getDefault()
                 )
-
-                // on below line we are specifying a prompt
-                // message as speak to text on below line.
                 intent.putExtra(RecognizerIntent.EXTRA_PROMPT, "Speak to text")
-
-                // on below line we are specifying a try catch block.
-                // in this block we are calling a start activity
-                // for result method and passing our result code.
                 try {
                     startActivityForResult(intent, REQUEST_CODE_SPEECH_INPUT)
                 } catch (e: Exception) {
-                    // on below line we are displaying error message in toast
                     Toast
                         .makeText(
                             this@MainActivity, " " + e.message,
@@ -115,12 +105,10 @@ class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
 
     override fun onInit(status: Int) {
         if (status == TextToSpeech.SUCCESS) {
-            val result = tts!!.setLanguage(Locale.US)
+            val result = tts!!.setLanguage(Locale.getDefault())
 
             if (result == TextToSpeech.LANG_MISSING_DATA || result == TextToSpeech.LANG_NOT_SUPPORTED) {
                 Log.e("TTS","The Language not supported!")
-            } else {
-//                btnSpeak!!.isEnabled = true
             }
         }
     }
@@ -130,8 +118,6 @@ class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
     }
 
     public override fun onDestroy() {
-        // Shutdown TTS when
-        // activity is destroyed
         if (tts != null) {
             tts!!.stop()
             tts!!.shutdown()
@@ -139,25 +125,21 @@ class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
         super.onDestroy()
     }
 
-    // on below line we are calling on activity result method.
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
 
-        // in this method we are checking request
-        // code with our result code.
         if (requestCode == REQUEST_CODE_SPEECH_INPUT) {
-            // on below line we are checking if result code is ok
             if (resultCode == RESULT_OK && data != null) {
-
-                // in that case we are extracting the
-                // data from our array list
                 val res: ArrayList<String> =
                     data.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS) as ArrayList<String>
 
-                // on below line we are setting data
-                // to our output text view.
                 val question = Objects.requireNonNull(res)[0].trim { it <= ' ' }
-                callAPI(question)
+                if (question.lowercase() == "manual aplikasi") {
+                    speakOut("Untuk memulai goyangkan ponsel dan tanyakan pertanyaan. ChatGPT akan " +
+                            "menjawab pertanyaan secara otomatis.")
+                } else {
+                    callAPI(question)
+                }
             }
         }
     }
